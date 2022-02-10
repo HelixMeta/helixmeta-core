@@ -1,11 +1,11 @@
 const jsonfile = require("jsonfile");
 
-const LooksRareExchange = jsonfile.readFileSync(
-  "build/contracts/LooksRareExchange.json"
+const HelixmetaExchange = jsonfile.readFileSync(
+  "build/contracts/HelixmetaExchange.json"
 ).abi;
 const IERC721 = jsonfile.readFileSync("build/contracts/IERC721.json").abi;
 
-const looksRareExchangeAddress = "0x21BA3C325951a2dF0b7a0995433C28b4C964dC4B";
+const helixmetaExchangeAddress = "0x21BA3C325951a2dF0b7a0995433C28b4C964dC4B";
 const erc721Address = "0x9ba7183c5b136a3e881f52ec4a8343fa1761c862";
 const MAKER_ORDER_HASH = 0x40261ade532fa1d2c7293df30aaadb9b3c616fae525a0b56d3d411c841a85028;
 const domainSeparator = "0x010630ef1735626d1c20c456cb92cddec65ab292107cc9b44f85970a53cbd6c5"
@@ -46,12 +46,12 @@ function sign_hash(inputHash, pkeyConfig) {
 
 contract("match ask with taker bid using ETH and WETH", function () {
   
-  it("should approve NFT721 tokenID 1 by maker ask from acc0 to looksRareExchange", async function () {
+  it("should approve NFT721 tokenID 1 by maker ask from acc0 to HelixmetaExchange", async function () {
     const accounts = await web3.eth.getAccounts();
     // // load exchange contract
     // const ERC721 = new web3.eth.Contract(IERC721, erc721Address);
 
-    // await ERC721.methods.approve(looksRareExchangeAddress, 2).send({
+    // await ERC721.methods.approve(helixmetaExchangeAddress, 2).send({
     //   from: accounts[0],
     // })
     // console.log(result)
@@ -96,9 +96,9 @@ contract("match ask with taker bid using ETH and WETH", function () {
     makerAsk.s = sign_data.s;
 
      // load exchange contract
-     const looksRareExchange = new web3.eth.Contract(LooksRareExchange, looksRareExchangeAddress);
+     const helixmetaExchange = new web3.eth.Contract(HelixmetaExchange, helixmetaExchangeAddress);
 
-     const result = await looksRareExchange.methods.matchAskWithTakerBidUsingETHAndWETH(takerBid, makerAsk).send({
+     const result = await helixmetaExchange.methods.matchAskWithTakerBidUsingETHAndWETH(takerBid, makerAsk).send({
        from: accounts[1]
      })
      console.log(result)

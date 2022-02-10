@@ -1,13 +1,13 @@
-const LooksRareToken = artifacts.require("LooksRareToken");
+const HelixmetaToken = artifacts.require("HelixmetaToken");
 
 module.exports = async function (deployer) {
   const totalSupply = "1000000000000000000000000000";
-  const pre_mint = "10000000000000000000";
+  const pre_mint = "0";
   await deployer.deploy(
-    LooksRareToken,
+    HelixmetaToken,
     process.env.PRE_MINT_ADDRESS,
     pre_mint,
     totalSupply
   );
-  await LooksRareToken.deployed();
+  await HelixmetaToken.deployed();
 };

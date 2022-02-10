@@ -1,4 +1,4 @@
-const LooksRareExchange = artifacts.require("LooksRareExchange");
+const HelixmetaExchange = artifacts.require("HelixmetaExchange");
 const CurrencyManager = artifacts.require("CurrencyManager");
 const ExecutionManager = artifacts.require("ExecutionManager");
 const RoyaltyFeeManager = artifacts.require("RoyaltyFeeManager");
@@ -9,12 +9,12 @@ module.exports = async function (deployer) {
   const royalty_fee_manager_address = (await RoyaltyFeeManager.deployed()).address
   
   await deployer.deploy(
-    LooksRareExchange,
+    HelixmetaExchange,
     currency_manager_address,
     execution_manager_address,
     royalty_fee_manager_address,
     process.env.WETH,
     process.env.PROTOCOL_FEE_RECIPIENT,
   );
-  await LooksRareExchange.deployed();
+  await HelixmetaExchange.deployed();
 };

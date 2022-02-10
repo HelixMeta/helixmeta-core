@@ -6,22 +6,22 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-// LooksRare interfaces
+// Helixmeta interfaces
 import {ICurrencyManager} from "./interfaces/ICurrencyManager.sol";
 import {IExecutionManager} from "./interfaces/IExecutionManager.sol";
 import {IExecutionStrategy} from "./interfaces/IExecutionStrategy.sol";
 import {IRoyaltyFeeManager} from "./interfaces/IRoyaltyFeeManager.sol";
-import {ILooksRareExchange} from "./interfaces/ILooksRareExchange.sol";
+import {IHelixmetaExchange} from "./interfaces/IHelixmetaExchange.sol";
 import {ITransferManagerNFT} from "./interfaces/ITransferManagerNFT.sol";
 import {ITransferSelectorNFT} from "./interfaces/ITransferSelectorNFT.sol";
 import {IWETH} from "./interfaces/IWETH.sol";
 
-// LooksRare libraries
+// Helixmeta libraries
 import {OrderTypes} from "./libraries/OrderTypes.sol";
 import {SignatureChecker} from "./libraries/SignatureChecker.sol";
 
 
-contract LooksRareExchange is ILooksRareExchange, ReentrancyGuard, Ownable {
+contract HelixmetaExchange is IHelixmetaExchange, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 
     using OrderTypes for OrderTypes.MakerOrder;
@@ -101,7 +101,7 @@ contract LooksRareExchange is ILooksRareExchange, ReentrancyGuard, Ownable {
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f, // keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)")
-                0xda9101ba92939daf4bb2e18cd5f942363b9297fbc3232c9dd964abb1fb70ed71, // keccak256("LooksRareExchange")
+                0x7b657d4fc11874487bc23ef1748375e9fcaef0ca01a477312a5f392a97857b85, // keccak256("HelixmetaExchange")
                 0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6, // keccak256(bytes("1")) for versionId = 1
                 block.chainid,
                 address(this)

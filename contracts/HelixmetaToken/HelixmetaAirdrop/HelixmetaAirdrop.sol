@@ -14,14 +14,14 @@ import {OrderTypes} from "../../libraries/OrderTypes.sol";
 import {SignatureChecker} from "../../libraries/SignatureChecker.sol";
 
 /**
- * @title LooksRareAirdrop
- * @notice It distributes LOOKS tokens with a Merkle-tree airdrop.
+ * @title HelixmetaAirdrop
+ * @notice It distributes HLM tokens with a Merkle-tree airdrop.
  */
-contract LooksRareAirdrop is Pausable, ReentrancyGuard, Ownable {
+contract HelixmetaAirdrop is Pausable, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
     using OrderTypes for OrderTypes.MakerOrder;
 
-    IERC20 public immutable looksRareToken;
+    IERC20 public immutable helixmetaToken;
 
     address public immutable MAIN_STRATEGY;
     address public immutable TRANSFER_MANAGER_ERC721;
@@ -48,10 +48,10 @@ contract LooksRareAirdrop is Pausable, ReentrancyGuard, Ownable {
     /**
      * @notice Constructor
      * @param _endTimestamp end timestamp for claiming
-     * @param _looksRareToken address of the LooksRare token
-     * @param _domainSeparator domain separator for LooksRare exchange
-     * @param _transferManagerERC721 address of the transfer manager for ERC721 for LooksRare exchange
-     * @param _transferManagerERC1155 address of the transfer manager for ERC1155 for LooksRare exchange
+     * @param _helixmetaToken address of the Helixmeta token
+     * @param _domainSeparator domain separator for Helixmeta exchange
+     * @param _transferManagerERC721 address of the transfer manager for ERC721 for Helixmeta exchange
+     * @param _transferManagerERC1155 address of the transfer manager for ERC1155 for Helixmeta exchange
      * @param _mainStrategy main strategy ("StandardSaleForFixedPrice")
      * @param _weth wrapped ETH address
      * @param _maximumAmountToClaim maximum amount to claim per a user
@@ -59,7 +59,7 @@ contract LooksRareAirdrop is Pausable, ReentrancyGuard, Ownable {
     constructor(
         uint256 _endTimestamp,
         uint256 _maximumAmountToClaim,
-        address _looksRareToken,
+        address _helixmetaToken,
         bytes32 _domainSeparator,
         address _transferManagerERC721,
         address _transferManagerERC1155,
@@ -69,7 +69,7 @@ contract LooksRareAirdrop is Pausable, ReentrancyGuard, Ownable {
         endTimestamp = _endTimestamp;
         MAXIMUM_AMOUNT_TO_CLAIM = _maximumAmountToClaim;
 
-        looksRareToken = IERC20(_looksRareToken);
+        helixmetaToken = IERC20(_helixmetaToken);
 
         DOMAIN_SEPARATOR_EXCHANGE = _domainSeparator;
         TRANSFER_MANAGER_ERC721 = _transferManagerERC721;
@@ -139,7 +139,7 @@ contract LooksRareAirdrop is Pausable, ReentrancyGuard, Ownable {
         hasClaimed[msg.sender] = true;
 
         // Transfer tokens
-        looksRareToken.safeTransfer(msg.sender, amount);
+        helixmetaToken.safeTransfer(msg.sender, amount);
 
         emit AirdropRewardsClaim(msg.sender, amount);
     }
@@ -208,8 +208,8 @@ contract LooksRareAirdrop is Pausable, ReentrancyGuard, Ownable {
      */
     function withdrawTokenRewards() external onlyOwner {
         require(block.timestamp > (endTimestamp + 1 days), "Owner: Too early to remove rewards");
-        uint256 balanceToWithdraw = looksRareToken.balanceOf(address(this));
-        looksRareToken.safeTransfer(msg.sender, balanceToWithdraw);
+        uint256 balanceToWithdraw = helixmetaToken.balanceOf(address(this));
+        helixmetaToken.safeTransfer(msg.sender, balanceToWithdraw);
 
         emit TokensWithdrawn(balanceToWithdraw);
     }

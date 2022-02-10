@@ -9,14 +9,14 @@ import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeE
 
 /**
  * @title TradingRewardsDistributor
- * @notice It distributes LOOKS tokens with rolling Merkle airdrops.
+ * @notice It distributes HLM tokens with rolling Merkle airdrops.
  */
 contract TradingRewardsDistributor is Pausable, ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 
     uint256 public constant BUFFER_ADMIN_WITHDRAW = 3 days;
 
-    IERC20 public immutable looksRareToken;
+    IERC20 public immutable helixmetaToken;
 
     // Current reward round (users can only claim pending rewards for the current round)
     uint256 public currentRewardRound;
@@ -27,7 +27,7 @@ contract TradingRewardsDistributor is Pausable, ReentrancyGuard, Ownable {
     // Max amount per user in current tree
     uint256 public maximumAmountPerUserInCurrentTree;
 
-    // Total amount claimed by user (in LOOKS)
+    // Total amount claimed by user (in HLM)
     mapping(address => uint256) public amountClaimedByUser;
 
     // Merkle root for a reward round
@@ -45,10 +45,10 @@ contract TradingRewardsDistributor is Pausable, ReentrancyGuard, Ownable {
 
     /**
      * @notice Constructor
-     * @param _looksRareToken address of the LooksRare token
+     * @param _helixmetaToken address of the helixmetaToken 
      */
-    constructor(address _looksRareToken) {
-        looksRareToken = IERC20(_looksRareToken);
+    constructor(address _helixmetaToken) {
+        helixmetaToken = IERC20(_helixmetaToken);
         _pause();
     }
 
@@ -73,7 +73,7 @@ contract TradingRewardsDistributor is Pausable, ReentrancyGuard, Ownable {
         amountClaimedByUser[msg.sender] += adjustedAmount;
 
         // Transfer adjusted amount
-        looksRareToken.safeTransfer(msg.sender, adjustedAmount);
+        helixmetaToken.safeTransfer(msg.sender, adjustedAmount);
 
         emit RewardsClaim(msg.sender, currentRewardRound, adjustedAmount);
     }
@@ -110,13 +110,13 @@ contract TradingRewardsDistributor is Pausable, ReentrancyGuard, Ownable {
     }
 
     /**
-     * @notice Transfer LOOKS tokens back to owner
+     * @notice Transfer HLM tokens back to owner
      * @dev It is for emergency purposes
      * @param amount amount to withdraw
      */
     function withdrawTokenRewards(uint256 amount) external onlyOwner whenPaused {
         require(block.timestamp > (lastPausedTimestamp + BUFFER_ADMIN_WITHDRAW), "Owner: Too early to withdraw");
-        looksRareToken.safeTransfer(msg.sender, amount);
+        helixmetaToken.safeTransfer(msg.sender, amount);
 
         emit TokenWithdrawnOwner(amount);
     }

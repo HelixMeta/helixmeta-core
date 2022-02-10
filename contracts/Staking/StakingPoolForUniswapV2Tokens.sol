@@ -11,7 +11,7 @@ import {TokenSplitter} from "./TokenSplitter.sol";
 
 /**
  * @title StakingPoolForUniswapV2Tokens
- * @notice It is a staking pool for Uniswap V2 LP tokens (stake Uniswap V2 LP tokens -> get LOOKS).
+ * @notice It is a staking pool for Uniswap V2 LP tokens (stake Uniswap V2 LP tokens -> get HLM).
  */
 contract StakingPoolForUniswapV2Tokens is Ownable, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -24,10 +24,10 @@ contract StakingPoolForUniswapV2Tokens is Ownable, Pausable, ReentrancyGuard {
     // Precision factor for reward calculation
     uint256 public constant PRECISION_FACTOR = 10**12;
 
-    // LOOKS token (token distributed)
-    IERC20 public immutable looksRareToken;
+    // HLM token (token distributed)
+    IERC20 public immutable helixmetaToken;
 
-    // The staked token (i.e., Uniswap V2 WETH/LOOKS LP token)
+    // The staked token (i.e., Uniswap V2 WETH/HLM LP token)
     IERC20 public immutable stakedToken;
 
     // Block number when rewards start
@@ -42,7 +42,7 @@ contract StakingPoolForUniswapV2Tokens is Ownable, Pausable, ReentrancyGuard {
     // Block number of the last update
     uint256 public lastRewardBlock;
 
-    // Tokens distributed per block (in looksRareToken)
+    // Tokens distributed per block (in helixmetaToken)
     uint256 public rewardPerBlock;
 
     // UserInfo for users that stake tokens (stakedToken)
@@ -58,20 +58,20 @@ contract StakingPoolForUniswapV2Tokens is Ownable, Pausable, ReentrancyGuard {
     /**
      * @notice Constructor
      * @param _stakedToken staked token address
-     * @param _looksRareToken reward token address
-     * @param _rewardPerBlock reward per block (in LOOKS)
+     * @param _helixmetaToken reward token address
+     * @param _rewardPerBlock reward per block (in HLM)
      * @param _startBlock start block
      * @param _endBlock end block
      */
     constructor(
         address _stakedToken,
-        address _looksRareToken,
+        address _helixmetaToken,
         uint256 _rewardPerBlock,
         uint256 _startBlock,
         uint256 _endBlock
     ) {
         stakedToken = IERC20(_stakedToken);
-        looksRareToken = IERC20(_looksRareToken);
+        helixmetaToken = IERC20(_helixmetaToken);
         rewardPerBlock = _rewardPerBlock;
         START_BLOCK = _startBlock;
         endBlock = _endBlock;
@@ -97,7 +97,7 @@ contract StakingPoolForUniswapV2Tokens is Ownable, Pausable, ReentrancyGuard {
                 userInfo[msg.sender].rewardDebt;
 
             if (pendingRewards > 0) {
-                looksRareToken.safeTransfer(msg.sender, pendingRewards);
+                helixmetaToken.safeTransfer(msg.sender, pendingRewards);
             }
         }
 
@@ -121,7 +121,7 @@ contract StakingPoolForUniswapV2Tokens is Ownable, Pausable, ReentrancyGuard {
         require(pendingRewards > 0, "Harvest: Pending rewards must be > 0");
 
         userInfo[msg.sender].rewardDebt = (userInfo[msg.sender].amount * accTokenPerShare) / PRECISION_FACTOR;
-        looksRareToken.safeTransfer(msg.sender, pendingRewards);
+        helixmetaToken.safeTransfer(msg.sender, pendingRewards);
 
         emit Harvest(msg.sender, pendingRewards);
     }
@@ -165,7 +165,7 @@ contract StakingPoolForUniswapV2Tokens is Ownable, Pausable, ReentrancyGuard {
         stakedToken.safeTransfer(msg.sender, amount);
 
         if (pendingRewards > 0) {
-            looksRareToken.safeTransfer(msg.sender, pendingRewards);
+            helixmetaToken.safeTransfer(msg.sender, pendingRewards);
         }
 
         emit Withdraw(msg.sender, amount, pendingRewards);
@@ -173,11 +173,11 @@ contract StakingPoolForUniswapV2Tokens is Ownable, Pausable, ReentrancyGuard {
 
     /**
      * @notice Withdraw rewards (for admin)
-     * @param amount amount to withdraw (in looksRareToken)
+     * @param amount amount to withdraw (in helixmetaToken)
      * @dev Only callable by owner.
      */
     function adminRewardWithdraw(uint256 amount) external onlyOwner {
-        looksRareToken.safeTransfer(msg.sender, amount);
+        helixmetaToken.safeTransfer(msg.sender, amount);
 
         emit AdminRewardWithdraw(amount);
     }

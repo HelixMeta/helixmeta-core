@@ -7,7 +7,7 @@ import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeE
 
 /**
  * @title TokenSplitter
- * @notice It splits LOOKS to team/treasury/trading volume reward accounts based on shares.
+ * @notice It splits HLM to team/treasury/trading volume reward accounts based on shares.
  */
 contract TokenSplitter is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -19,9 +19,9 @@ contract TokenSplitter is Ownable, ReentrancyGuard {
 
     uint256 public immutable TOTAL_SHARES;
 
-    IERC20 public immutable looksRareToken;
+    IERC20 public immutable helixmetaToken;
 
-    // Total LOOKS tokens distributed across all accounts
+    // Total HLM tokens distributed across all accounts
     uint256 public totalTokensDistributed;
 
     mapping(address => AccountInfo) public accountInfo;
@@ -33,12 +33,12 @@ contract TokenSplitter is Ownable, ReentrancyGuard {
      * @notice Constructor
      * @param _accounts array of accounts addresses
      * @param _shares array of shares per account
-     * @param _looksRareToken address of the LOOKS token
+     * @param _helixmetaToken address of the HLM token
      */
     constructor(
         address[] memory _accounts,
         uint256[] memory _shares,
-        address _looksRareToken
+        address _helixmetaToken
     ) {
         require(_accounts.length == _shares.length, "Splitter: Length differ");
         require(_accounts.length > 0, "Splitter: Length must be > 0");
@@ -53,18 +53,18 @@ contract TokenSplitter is Ownable, ReentrancyGuard {
         }
 
         TOTAL_SHARES = currentShares;
-        looksRareToken = IERC20(_looksRareToken);
+        helixmetaToken = IERC20(_helixmetaToken);
     }
 
     /**
-     * @notice Release LOOKS tokens to the account
+     * @notice Release HLM tokens to the account
      * @param account address of the account
      */
     function releaseTokens(address account) external nonReentrant {
         require(accountInfo[account].shares > 0, "Splitter: Account has no share");
 
         // Calculate amount to transfer to the account
-        uint256 totalTokensReceived = looksRareToken.balanceOf(address(this)) + totalTokensDistributed;
+        uint256 totalTokensReceived = helixmetaToken.balanceOf(address(this)) + totalTokensDistributed;
         uint256 pendingRewards = ((totalTokensReceived * accountInfo[account].shares) / TOTAL_SHARES) -
             accountInfo[account].tokensDistributedToAccount;
 
@@ -75,7 +75,7 @@ contract TokenSplitter is Ownable, ReentrancyGuard {
         totalTokensDistributed += pendingRewards;
 
         // Transfer funds to account
-        looksRareToken.safeTransfer(account, pendingRewards);
+        helixmetaToken.safeTransfer(account, pendingRewards);
 
         emit TokensTransferred(account, pendingRewards);
     }
@@ -102,7 +102,7 @@ contract TokenSplitter is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Retrieve amount of LOOKS tokens that can be transferred
+     * @notice Retrieve amount of HLM tokens that can be transferred
      * @param account address of the account
      */
     function calculatePendingRewards(address account) external view returns (uint256) {
@@ -110,7 +110,7 @@ contract TokenSplitter is Ownable, ReentrancyGuard {
             return 0;
         }
 
-        uint256 totalTokensReceived = looksRareToken.balanceOf(address(this)) + totalTokensDistributed;
+        uint256 totalTokensReceived = helixmetaToken.balanceOf(address(this)) + totalTokensDistributed;
         uint256 pendingRewards = ((totalTokensReceived * accountInfo[account].shares) / TOTAL_SHARES) -
             accountInfo[account].tokensDistributedToAccount;
 

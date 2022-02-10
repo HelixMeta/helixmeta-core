@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import {ILooksRareToken} from "../interfaces/ILooksRareToken.sol";
+import {IHelixmetaToken} from "../interfaces/IHelixmetaToken.sol";
 
-contract LooksRareToken is ERC20, Ownable, ILooksRareToken {
+contract HelixmetaToken is ERC20, Ownable, IHelixmetaToken {
     uint256 private immutable _SUPPLY_CAP;
 
     /**
@@ -19,15 +19,15 @@ contract LooksRareToken is ERC20, Ownable, ILooksRareToken {
         address _premintReceiver,
         uint256 _premintAmount,
         uint256 _cap
-    ) ERC20("LooksRare Token", "LOOKS") {
-        require(_cap > _premintAmount, "LOOKS: Premint amount is greater than cap");
+    ) ERC20("Helixmeta", "HLM") {
+        require(_cap > _premintAmount, "HLM: Premint amount is greater than cap");
         // Transfer the sum of the premint to address
         _mint(_premintReceiver, _premintAmount);
         _SUPPLY_CAP = _cap;
     }
 
     /**
-     * @notice Mint LOOKS tokens
+     * @notice Mint HLM tokens
      * @param account address to receive tokens
      * @param amount amount to mint
      * @return status true if mint is successful, false if not

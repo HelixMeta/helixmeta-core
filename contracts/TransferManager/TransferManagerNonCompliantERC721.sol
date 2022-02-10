@@ -9,14 +9,14 @@ import {ITransferManagerNFT} from "../interfaces/ITransferManagerNFT.sol";
  * @notice It allows the transfer of ERC721 tokens without safeTransferFrom.
  */
 contract TransferManagerNonCompliantERC721 is ITransferManagerNFT {
-    address public immutable LOOKS_RARE_EXCHANGE;
+    address public immutable HELIX_META_EXCHANGE;
 
     /**
      * @notice Constructor
-     * @param _looksRareExchange address of the LooksRare exchange
+     * @param _helixmetaExchange address of the Helixmeta exchange
      */
-    constructor(address _looksRareExchange) {
-        LOOKS_RARE_EXCHANGE = _looksRareExchange;
+    constructor(address _helixmetaExchange) {
+        HELIX_META_EXCHANGE = _helixmetaExchange;
     }
 
     /**
@@ -33,7 +33,7 @@ contract TransferManagerNonCompliantERC721 is ITransferManagerNFT {
         uint256 tokenId,
         uint256
     ) external override {
-        require(msg.sender == LOOKS_RARE_EXCHANGE, "Transfer: Only LooksRare Exchange");
+        require(msg.sender == HELIX_META_EXCHANGE, "Transfer: Only Helixmeta Exchange");
         IERC721(collection).transferFrom(from, to, tokenId);
     }
 }

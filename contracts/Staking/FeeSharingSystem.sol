@@ -10,7 +10,7 @@ import {TokenDistributor} from "./TokenDistributor.sol";
 /**
  * @title FeeSharingSystem
  * @notice It handles the distribution of fees using
- * WETH along with the auto-compounding of LOOKS.
+ * WETH along with the auto-compounding of HLM.
  */
 contract FeeSharingSystem is ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
@@ -24,7 +24,7 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
     // Precision factor for calculating rewards and exchange rate
     uint256 public constant PRECISION_FACTOR = 10**18;
 
-    IERC20 public immutable looksRareToken;
+    IERC20 public immutable helixmetaToken;
 
     IERC20 public immutable rewardToken;
 
@@ -57,28 +57,28 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
 
     /**
      * @notice Constructor
-     * @param _looksRareToken address of the token staked (LOOKS)
+     * @param _helixmetaToken address of the token staked (HLM)
      * @param _rewardToken address of the reward token
      * @param _tokenDistributor address of the token distributor contract
      */
     constructor(
-        address _looksRareToken,
+        address _helixmetaToken,
         address _rewardToken,
         address _tokenDistributor
     ) {
         rewardToken = IERC20(_rewardToken);
-        looksRareToken = IERC20(_looksRareToken);
+        helixmetaToken = IERC20(_helixmetaToken);
         tokenDistributor = TokenDistributor(_tokenDistributor);
     }
 
     /**
      * @notice Deposit staked tokens (and collect reward tokens if requested)
-     * @param amount amount to deposit (in LOOKS)
+     * @param amount amount to deposit (in HLM)
      * @param claimRewardToken whether to claim reward tokens
-     * @dev There is a limit of 1 LOOKS per deposit to prevent potential manipulation of current shares
+     * @dev There is a limit of 1 HLM per deposit to prevent potential manipulation of current shares
      */
     function deposit(uint256 amount, bool claimRewardToken) external nonReentrant {
-        require(amount >= PRECISION_FACTOR, "Deposit: Amount must be >= 1 LOOKS");
+        require(amount >= PRECISION_FACTOR, "Deposit: Amount must be >= 1 HLM");
 
         // Auto compounds for everyone
         tokenDistributor.harvestAndCompound();
@@ -89,8 +89,8 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
         // Retrieve total amount staked by this contract
         (uint256 totalAmountStaked, ) = tokenDistributor.userInfo(address(this));
 
-        // Transfer LOOKS tokens to this address
-        looksRareToken.safeTransferFrom(msg.sender, address(this), amount);
+        // Transfer HLM tokens to this address
+        helixmetaToken.safeTransferFrom(msg.sender, address(this), amount);
 
         uint256 currentShares;
 
@@ -119,8 +119,8 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
             }
         }
 
-        // Verify LOOKS token allowance and adjust if necessary
-        _checkAndAdjustLOOKSTokenAllowanceIfRequired(amount, address(tokenDistributor));
+        // Verify HLM token allowance and adjust if necessary
+        _checkAndAdjustHLMTokenAllowanceIfRequired(amount, address(tokenDistributor));
 
         // Deposit user amount in the token distributor contract
         tokenDistributor.deposit(amount);
@@ -204,10 +204,10 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
     }
 
     /**
-     * @notice Calculate value of LOOKS for a user given a number of shares owned
+     * @notice Calculate value of HLM for a user given a number of shares owned
      * @param user address of the user
      */
-    function calculateSharesValueInLOOKS(address user) external view returns (uint256) {
+    function calculateSharesValueInHLM(address user) external view returns (uint256) {
         // Retrieve amount staked
         (uint256 totalAmountStaked, ) = tokenDistributor.userInfo(address(this));
 
@@ -219,10 +219,10 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
     }
 
     /**
-     * @notice Calculate price of one share (in LOOKS token)
+     * @notice Calculate price of one share (in HLM token)
      * Share price is expressed times 1e18
      */
-    function calculateSharePriceInLOOKS() external view returns (uint256) {
+    function calculateSharePriceInHLM() external view returns (uint256) {
         (uint256 totalAmountStaked, ) = tokenDistributor.userInfo(address(this));
 
         // Adjust for pending rewards
@@ -253,9 +253,9 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
      * @param _amount amount to transfer
      * @param _to token to transfer
      */
-    function _checkAndAdjustLOOKSTokenAllowanceIfRequired(uint256 _amount, address _to) internal {
-        if (looksRareToken.allowance(address(this), _to) < _amount) {
-            looksRareToken.approve(_to, type(uint256).max);
+    function _checkAndAdjustHLMTokenAllowanceIfRequired(uint256 _amount, address _to) internal {
+        if (helixmetaToken.allowance(address(this), _to) < _amount) {
+            helixmetaToken.approve(_to, type(uint256).max);
         }
     }
 
@@ -306,7 +306,7 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
         // Update reward for user
         _updateReward(msg.sender);
 
-        // Retrieve total amount staked and calculated current amount (in LOOKS)
+        // Retrieve total amount staked and calculated current amount (in HLM)
         (uint256 totalAmountStaked, ) = tokenDistributor.userInfo(address(this));
         uint256 currentAmount = (totalAmountStaked * shares) / totalShares;
 
@@ -328,8 +328,8 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
             }
         }
 
-        // Transfer LOOKS tokens to sender
-        looksRareToken.safeTransfer(msg.sender, currentAmount);
+        // Transfer HLM tokens to sender
+        helixmetaToken.safeTransfer(msg.sender, currentAmount);
 
         emit Withdraw(msg.sender, currentAmount, pendingRewards);
     }

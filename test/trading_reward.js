@@ -64,7 +64,7 @@ contract("trading reward", function () {
     );
 
     const result = await trading_reward_instance.methods
-      .claim("1000000000000000",["0xec977a43979281c79e2e103c24f473ddd8c2a17a8150786715af4375003973b0","0x34d344e5369c637b21286b2ab104a1faea1904ef7f7160de20165fc2c08904f9"])
+      .claim(amount[0],[hash_acc_amount[1],hash_acc_amount[2]])
       .send({
         from: accounts[1],
       });

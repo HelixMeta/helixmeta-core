@@ -98,7 +98,7 @@ contract("exchange for users", function () {
     // load erc721 contract
     const ERC721 = new web3.eth.Contract(IERC721, erc721_address);
     await ERC721.methods
-      .approve(transfererc721_manager_addr, token_id_erc)
+      .setApprovalForAll(transfererc721_manager_addr, true)
       .send({
         from: accounts[0],
       });
@@ -244,7 +244,7 @@ contract("exchange for users", function () {
     // load erc721 contract
     const ERC721 = new web3.eth.Contract(IERC721, erc721_address);
     await ERC721.methods
-      .approve(transfererc721_manager_addr, token_id_erc)
+      .setApprovalForAll(transfererc721_manager_addr, true)
       .send({
         from: accounts[1],
       });

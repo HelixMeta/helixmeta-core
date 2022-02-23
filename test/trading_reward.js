@@ -29,7 +29,7 @@ contract("trading reward", function () {
   var hash_acc_amount = [];
   for (var i = 0; i < acc.length; i++) {
     hash_acc_amount[i] = hash_acc_and_amount(acc[i], amount[i]);
-    console.log(hash_acc_amount[i])
+    // console.log("hash is: ",hash_acc_amount[i])
   }
   var root = hash_acc_amount[0];
   for (var i = 1; i < acc.length; i++) {
@@ -44,6 +44,7 @@ contract("trading reward", function () {
       TradingRewardsDistributor,
       trading_reward_address
     );
+    // console.log("root is: ",root)
 
     const result = await trading_reward_instance.methods
       .updateTradingRewards(root, "1000000000000000")

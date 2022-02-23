@@ -17,21 +17,22 @@ const MAKER_ORDER_HASH =
 
 //replace for new deployment
 const transfererc721_manager_addr =
-  "0x4e0D0E0e74b35bb64783F75Eba1D74b3C2034BFD";
+  "0xcAEE83e4E0a2df8f2203e4B31C8Cb392f5802017";
 const transfererc1155_manager_addr =
-  "0x6cc9A96AAB3e82Cd64cA6b3DAA8303049F444F98";
-const helixmeta_exchange_address = "0xf69746e7f5636d13426f41E38d6445767f682F4C";
-const helixmeta_token_address = "0x9BAf798DF6786E05A29C496d37756F1F81fCF008";
-const erc721_address = "0x9ba7183c5b136a3e881f52ec4a8343fa1761c862";
+  "0xBE7EAA73CECE2f0cF02Bf97ee56B84b84632661B";
+const helixmeta_exchange_address = "0x57e8321Cb1330e5dAD1365A2a949035f8bb6d08F";
+const helixmeta_token_address = "0xf7b96BdF10ED54bc00c2cB056f54c958BD939413";
+
+const erc721_address = "0x9FF3E501B62509339a0fb64867e390748Be25d94";
 const erc1155_address = "0x73fe1280bd329e542ebd34af1620026fe4c6d080";
 const prefix_domain =
-  "0x190147d063a2b0975ac851bcfce5ad21b3feae3dfc7e0669f6f36a47619ac99ef71c";
+  "0x1901b0435a1eefc38481f656f82445c1697ae2036f2b1e837029013ab1548db61c96";
 const WETH = process.env.WETH;
-const standard_strategy = "0x5aAA091990edc6657a20605974a6FE9048F7F342";
+const standard_strategy = "0xA81FC74f873e60F26cf46C90B34321173Ee6Ac10";
 
 //replace for each test (increate 1 for token, 3 for nonce)
-const token_id_erc = 12;
-const nonce = 11;
+const token_id_erc = 1;
+const nonce = 3;
 
 const SK_acc0 =
   "d278b1141f204160fcbed9ea0b3c33b74a4f0a2207ec4482b77ffabde8c0c35a";

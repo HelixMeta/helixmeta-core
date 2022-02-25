@@ -9,8 +9,8 @@ module.exports = async function (deployer) {
       await HelixmetaToken.deployed()
     ).address,
     process.env.REWARD_PER_BLOCK,
-    process.env.STARTBLOCK,
-    process.env.ENDBLOCK,
+    process.env.STARTBLOCK_POOL,
+    process.env.ENDBLOCK_POOL,
   );
   await StakingPoolForUniswapV2Tokens.deployed();
  

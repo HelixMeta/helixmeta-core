@@ -2,11 +2,16 @@ const FeeSharingSystem = artifacts.require("FeeSharingSystem");
 const HelixmetaToken = artifacts.require("HelixmetaToken");
 const TokenDistributor = artifacts.require("TokenDistributor");
 const TokenSplitter = artifacts.require("TokenSplitter");
+const TradingRewardsDistributor = artifacts.require(
+  "TradingRewardsDistributor"
+);
 
 module.exports = async function (deployer) {
+  let account = process.env.ACCOUNT.split(' ')
+  account[2] = (await TradingRewardsDistributor.deployed()).address
   await deployer.deploy(
     TokenSplitter,
-    process.env.ACCOUNT.split(' '),
+    account,
     process.env.SHARES.split(' '),
     (
       await HelixmetaToken.deployed()

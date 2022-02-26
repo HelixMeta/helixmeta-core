@@ -50,10 +50,22 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
 
     mapping(address => UserInfo) public userInfo;
 
-    event Deposit(address indexed user, uint256 amount, uint256 harvestedAmount);
+    event Deposit(
+        address indexed user,
+        uint256 amount,
+        uint256 harvestedAmount
+    );
     event Harvest(address indexed user, uint256 harvestedAmount);
-    event NewRewardPeriod(uint256 numberBlocks, uint256 rewardPerBlock, uint256 reward);
-    event Withdraw(address indexed user, uint256 amount, uint256 harvestedAmount);
+    event NewRewardPeriod(
+        uint256 numberBlocks,
+        uint256 rewardPerBlock,
+        uint256 reward
+    );
+    event Withdraw(
+        address indexed user,
+        uint256 amount,
+        uint256 harvestedAmount
+    );
 
     /**
      * @notice Constructor
@@ -77,7 +89,10 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
      * @param claimRewardToken whether to claim reward tokens
      * @dev There is a limit of 1 HLM per deposit to prevent potential manipulation of current shares
      */
-    function deposit(uint256 amount, bool claimRewardToken) external nonReentrant {
+    function deposit(uint256 amount, bool claimRewardToken)
+        external
+        nonReentrant
+    {
         require(amount >= PRECISION_FACTOR, "Deposit: Amount must be >= 1 HLM");
 
         // Auto compounds for everyone
@@ -87,7 +102,9 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
         _updateReward(msg.sender);
 
         // Retrieve total amount staked by this contract
-        (uint256 totalAmountStaked, ) = tokenDistributor.userInfo(address(this));
+        (uint256 totalAmountStaked, ) = tokenDistributor.userInfo(
+            address(this)
+        );
 
         // Transfer HLM tokens to this address
         helixmetaToken.safeTransferFrom(msg.sender, address(this), amount);
@@ -120,7 +137,10 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
         }
 
         // Verify HLM token allowance and adjust if necessary
-        _checkAndAdjustHLMTokenAllowanceIfRequired(amount, address(tokenDistributor));
+        _checkAndAdjustHLMTokenAllowanceIfRequired(
+            amount,
+            address(tokenDistributor)
+        );
 
         // Deposit user amount in the token distributor contract
         tokenDistributor.deposit(amount);
@@ -158,7 +178,10 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
      * @param shares shares to withdraw
      * @param claimRewardToken whether to claim reward tokens
      */
-    function withdraw(uint256 shares, bool claimRewardToken) external nonReentrant {
+    function withdraw(uint256 shares, bool claimRewardToken)
+        external
+        nonReentrant
+    {
         require(
             (shares > 0) && (shares <= userInfo[msg.sender].shares),
             "Withdraw: Shares equal to 0 or larger than user shares"
@@ -176,30 +199,50 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
     }
 
     /**
+     * @notice Withdraw all staked tokens (and collect reward tokens if requested)
+     * @param amount amount withdraw
+     */
+    function adminWithdrawReward(uint256 amount) external nonReentrant onlyOwner{
+        rewardToken.safeTransfer(msg.sender, amount);
+    }
+
+    /**
      * @notice Update the reward per block (in rewardToken)
      * @dev Only callable by owner. Owner is meant to be another smart contract.
      */
-    function updateRewards(uint256 reward, uint256 rewardDurationInBlocks) external onlyOwner {
+    function updateRewards(uint256 reward, uint256 rewardDurationInBlocks)
+        external
+        onlyOwner
+    {
         // Adjust the current reward per block
         if (block.number >= periodEndBlock) {
             currentRewardPerBlock = reward / rewardDurationInBlocks;
         } else {
             currentRewardPerBlock =
-                (reward + ((periodEndBlock - block.number) * currentRewardPerBlock)) /
+                (reward +
+                    ((periodEndBlock - block.number) * currentRewardPerBlock)) /
                 rewardDurationInBlocks;
         }
 
         lastUpdateBlock = block.number;
         periodEndBlock = block.number + rewardDurationInBlocks;
 
-        emit NewRewardPeriod(rewardDurationInBlocks, currentRewardPerBlock, reward);
+        emit NewRewardPeriod(
+            rewardDurationInBlocks,
+            currentRewardPerBlock,
+            reward
+        );
     }
 
     /**
      * @notice Calculate pending rewards (WETH) for a user
      * @param user address of the user
      */
-    function calculatePendingRewards(address user) external view returns (uint256) {
+    function calculatePendingRewards(address user)
+        external
+        view
+        returns (uint256)
+    {
         return _calculatePendingRewards(user);
     }
 
@@ -207,15 +250,26 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
      * @notice Calculate value of HLM for a user given a number of shares owned
      * @param user address of the user
      */
-    function calculateSharesValueInHLM(address user) external view returns (uint256) {
+    function calculateSharesValueInHLM(address user)
+        external
+        view
+        returns (uint256)
+    {
         // Retrieve amount staked
-        (uint256 totalAmountStaked, ) = tokenDistributor.userInfo(address(this));
+        (uint256 totalAmountStaked, ) = tokenDistributor.userInfo(
+            address(this)
+        );
 
         // Adjust for pending rewards
-        totalAmountStaked += tokenDistributor.calculatePendingRewards(address(this));
+        totalAmountStaked += tokenDistributor.calculatePendingRewards(
+            address(this)
+        );
 
         // Return user pro-rata of total shares
-        return userInfo[user].shares == 0 ? 0 : (totalAmountStaked * userInfo[user].shares) / totalShares;
+        return
+            userInfo[user].shares == 0
+                ? 0
+                : (totalAmountStaked * userInfo[user].shares) / totalShares;
     }
 
     /**
@@ -223,12 +277,19 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
      * Share price is expressed times 1e18
      */
     function calculateSharePriceInHLM() external view returns (uint256) {
-        (uint256 totalAmountStaked, ) = tokenDistributor.userInfo(address(this));
+        (uint256 totalAmountStaked, ) = tokenDistributor.userInfo(
+            address(this)
+        );
 
         // Adjust for pending rewards
-        totalAmountStaked += tokenDistributor.calculatePendingRewards(address(this));
+        totalAmountStaked += tokenDistributor.calculatePendingRewards(
+            address(this)
+        );
 
-        return totalShares == 0 ? PRECISION_FACTOR : (totalAmountStaked * PRECISION_FACTOR) / (totalShares);
+        return
+            totalShares == 0
+                ? PRECISION_FACTOR
+                : (totalAmountStaked * PRECISION_FACTOR) / (totalShares);
     }
 
     /**
@@ -242,9 +303,14 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
      * @notice Calculate pending rewards for a user
      * @param user address of the user
      */
-    function _calculatePendingRewards(address user) internal view returns (uint256) {
+    function _calculatePendingRewards(address user)
+        internal
+        view
+        returns (uint256)
+    {
         return
-            ((userInfo[user].shares * (_rewardPerToken() - (userInfo[user].userRewardPerTokenPaid))) /
+            ((userInfo[user].shares *
+                (_rewardPerToken() - (userInfo[user].userRewardPerTokenPaid))) /
                 PRECISION_FACTOR) + userInfo[user].rewards;
     }
 
@@ -253,7 +319,10 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
      * @param _amount amount to transfer
      * @param _to token to transfer
      */
-    function _checkAndAdjustHLMTokenAllowanceIfRequired(uint256 _amount, address _to) internal {
+    function _checkAndAdjustHLMTokenAllowanceIfRequired(
+        uint256 _amount,
+        address _to
+    ) internal {
         if (helixmetaToken.allowance(address(this), _to) < _amount) {
             helixmetaToken.approve(_to, type(uint256).max);
         }
@@ -276,7 +345,8 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
 
         return
             rewardPerTokenStored +
-            ((_lastRewardBlock() - lastUpdateBlock) * (currentRewardPerBlock * PRECISION_FACTOR)) /
+            ((_lastRewardBlock() - lastUpdateBlock) *
+                (currentRewardPerBlock * PRECISION_FACTOR)) /
             totalShares;
     }
 
@@ -307,7 +377,9 @@ contract FeeSharingSystem is ReentrancyGuard, Ownable {
         _updateReward(msg.sender);
 
         // Retrieve total amount staked and calculated current amount (in HLM)
-        (uint256 totalAmountStaked, ) = tokenDistributor.userInfo(address(this));
+        (uint256 totalAmountStaked, ) = tokenDistributor.userInfo(
+            address(this)
+        );
         uint256 currentAmount = (totalAmountStaked * shares) / totalShares;
 
         userInfo[msg.sender].shares -= shares;

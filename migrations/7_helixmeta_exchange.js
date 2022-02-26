@@ -2,6 +2,7 @@ const HelixmetaExchange = artifacts.require("HelixmetaExchange");
 const CurrencyManager = artifacts.require("CurrencyManager");
 const ExecutionManager = artifacts.require("ExecutionManager");
 const RoyaltyFeeManager = artifacts.require("RoyaltyFeeManager");
+const FeeSharingSystem = artifacts.require("FeeSharingSystem");
 
 module.exports = async function (deployer) {
   const currency_manager_address = (await CurrencyManager.deployed()).address
@@ -14,7 +15,7 @@ module.exports = async function (deployer) {
     execution_manager_address,
     royalty_fee_manager_address,
     process.env.WETH,
-    process.env.PROTOCOL_FEE_RECIPIENT,
+    (await FeeSharingSystem.deployed()).address,
   );
   await HelixmetaExchange.deployed();
 };

@@ -1,4 +1,4 @@
-const currency_manager_addr = "0x7a343235105020b7C5Fa34Ad33Bc2E8fAB01F9EB";
+const token_distributor = "0xbffF48114874f55354c1BE1F6B450bCa9FF8666B";
 const HLM_token = "0x6E94679a254b23CB97A6b8961C90b8f12D23776D"
 require("dotenv").config({ path: ".env" });
 const WETH = process.env.WETH;
@@ -9,17 +9,16 @@ let provider = new HDWalletProvider(process.env.MNEMONIC, process.env.PROVIDER);
 const Web3 = require("web3");
 const web3 = new Web3(provider);
 
-const CurrencyManager = jsonfile.readFileSync(
-  "build/contracts/CurrencyManager.json"
+const HelixmetaToken = jsonfile.readFileSync(
+  "build/contracts/HelixmetaToken.json"
 ).abi;
 
 async function run() {
   const account = await web3.eth.getAccounts()
-  const currency_manager = new web3.eth.Contract(
-    CurrencyManager,
-    currency_manager_addr
+  const token = new web3.eth.Contract(
+    HelixmetaToken,
+    HLM_token
   );
-  await currency_manager.methods.addCurrency(WETH).send({from: account[0]});
-  await currency_manager.methods.addCurrency(HLM_token).send({from: account[0]});
+  await token.methods.transferOwnership(token_distributor).send({from: account[0]});
 }
 run();

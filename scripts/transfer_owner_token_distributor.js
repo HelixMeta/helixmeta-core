@@ -1,5 +1,5 @@
-const token_distributor = "0xbffF48114874f55354c1BE1F6B450bCa9FF8666B";
-const HLM_token = "0x6E94679a254b23CB97A6b8961C90b8f12D23776D"
+const token_distributor = "0x62fA9e216381806463Eb7Ae150139d18e8fAA0a3";
+const HLM_token = "0xa4826C8E672c958Ddb34Ca9C1E02Ea9d43e7B277"
 require("dotenv").config({ path: ".env" });
 const WETH = process.env.WETH;
 const jsonfile = require("jsonfile");
@@ -19,6 +19,7 @@ async function run() {
     HelixmetaToken,
     HLM_token
   );
+
   await token.methods.transferOwnership(token_distributor).send({from: account[0]});
 }
 run();

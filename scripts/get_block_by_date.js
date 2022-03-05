@@ -9,14 +9,14 @@ const dater = new EthDater(
 );
 async function get_block() {
   let block = await dater.getDate(
-    "25 Feb 2022 00:00:00 GMT", // Date, required. Any valid moment.js value: string, milliseconds, Date() object, moment() object.
+    "5 Mar 2022 00:00:00 GMT", // Date, required. Any valid moment.js value: string, milliseconds, Date() object, moment() object.
     true // Block after, optional. Search for the nearest block before or after the given date. By default true.
   );
 
   // console.log(block)
   console.log("block number:", block.block);
 
-  let timestamp = new Date('25 Mar 2022 00:00:00 GMT').getTime()
+  let timestamp = new Date('15 Mar 2022 00:00:00 GMT').getTime()
   console.log("timestamp:", Math.floor(timestamp/1000));
 }
 get_block();

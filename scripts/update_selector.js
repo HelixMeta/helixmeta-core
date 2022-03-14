@@ -1,5 +1,5 @@
-const selector_addr = "0x92aa50a281a4A9AD6A5913E497c472410Bfa8a9E";
-const helix_exchange_addr = "0x5F14f67a86022781db3Ac086E37a705C0e3e6C74";
+const selector_addr = "0x35534EAB975E1e4f7164b2807f9139bE81313668";
+const helix_exchange_addr = "0xb8f763185c1BE193B2836E96a1f255A2B0146D17";
 
 require("dotenv").config({ path: ".env" });
 

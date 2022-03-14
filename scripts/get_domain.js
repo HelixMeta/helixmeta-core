@@ -1,4 +1,4 @@
-const helix_exchange_addr = "0x5F14f67a86022781db3Ac086E37a705C0e3e6C74";
+const helix_exchange_addr = "0xb8f763185c1BE193B2836E96a1f255A2B0146D17";
 const jsonfile = require("jsonfile");
 require("dotenv").config({ path: ".env" });
 const HDWalletProvider = require("@truffle/hdwallet-provider");

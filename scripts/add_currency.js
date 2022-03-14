@@ -1,5 +1,5 @@
-const currency_manager_addr = "0x4EEc801bD061771B27c201449eB1EA761a45c6fd";
-const HLM_token = "0xa4826C8E672c958Ddb34Ca9C1E02Ea9d43e7B277"
+const currency_manager_addr = "0x576Ee42B42298B376838D0bb81Fe21E3177a2aCD";
+const HLM_token = "0x3a5198947E93600074521D436e897C801F02C8f1"
 require("dotenv").config({ path: ".env" });
 const WETH = process.env.WETH;
 const jsonfile = require("jsonfile");

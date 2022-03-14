@@ -1,7 +1,7 @@
-const trading_reward_distributor = "0x24BAf37B0A82ce69d26531cFD450a9745A7e1f61";
-const helixmeta_exchange= "0x5F14f67a86022781db3Ac086E37a705C0e3e6C74"
-const fee_sharing_system = "0x9Cf98aa9C0b0c51602c8FDCf37117a0b1F9a6698"
-const airdrop = "0x4000bC590dE3c17E8Ff11732C2582A995AA16481"
+const trading_reward_distributor = "0xE2A7bCfB837a8644D811f6c18a10EcaC26c67cef";
+const helixmeta_exchange= "0xb8f763185c1BE193B2836E96a1f255A2B0146D17"
+const fee_sharing_system = "0x326f244497551ABE9d3923F717D68632099f62bC"
+const airdrop = "0x5Ead792bEb1756B5a1948102832829F516F772c9"
 const owner = "0xFcC568980C9fbE61e43bd5D1673B37dCF3d7f464"
 require("dotenv").config({ path: ".env" });
 

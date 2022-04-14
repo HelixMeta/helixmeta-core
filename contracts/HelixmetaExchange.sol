@@ -27,8 +27,6 @@ contract HelixmetaExchange is IHelixmetaExchange, ReentrancyGuard, Ownable {
     using OrderTypes for OrderTypes.TakerOrder;
 
     address public immutable WETH;
-    uint256 public amountOfWETHinOneRound = 0;
-    bool public isCountWETH = true;
     bytes32 public immutable DOMAIN_SEPARATOR;
 
     address public protocolFeeRecipient;
@@ -423,17 +421,6 @@ contract HelixmetaExchange is IHelixmetaExchange, ReentrancyGuard, Ownable {
     }
 
     /**
-     * @notice Update new count weth
-     *
-     */
-    function updateNewRound(bool isCount) external onlyOwner returns (uint256) {
-        uint256 temp = amountOfWETHinOneRound;
-        amountOfWETHinOneRound = 0;
-        isCountWETH = isCount;
-        return temp;
-    }
-
-    /**
      * @notice Update protocol fee and recipient
      * @param _protocolFeeRecipient new recipient for protocol fees
      */
@@ -528,9 +515,6 @@ contract HelixmetaExchange is IHelixmetaExchange, ReentrancyGuard, Ownable {
                     protocolFeeAmount
                 );
                 finalSellerAmount -= protocolFeeAmount;
-                if (currency == WETH) {
-                    _countWETH(protocolFeeAmount);
-                }
             }
         }
 
@@ -577,10 +561,6 @@ contract HelixmetaExchange is IHelixmetaExchange, ReentrancyGuard, Ownable {
         }
     }
 
-    function _countWETH(uint256 amount) internal {
-        if (isCountWETH) amountOfWETHinOneRound += amount;
-    }
-
     /**
      * @notice Transfer fees and funds to royalty recipient, protocol, and seller
      * @param strategy address of the execution strategy
@@ -614,7 +594,6 @@ contract HelixmetaExchange is IHelixmetaExchange, ReentrancyGuard, Ownable {
                     protocolFeeAmount
                 );
                 finalSellerAmount -= protocolFeeAmount;
-                _countWETH(protocolFeeAmount);
             }
         }
 

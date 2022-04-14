@@ -8,5 +8,4 @@ module.exports = async function (deployer) {
     process.env.PRE_MINT,
     process.env.TOTAL_SUPPLY
   );
-  await HelixmetaToken.deployed();
 };

@@ -6,5 +6,4 @@ const TradingRewardsDistributor = artifacts.require(
 
 module.exports = async function (deployer) {
   await deployer.deploy(TradingRewardsDistributor, (await HelixmetaToken.deployed()).address);
-  await TradingRewardsDistributor.deployed();
 };

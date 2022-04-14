@@ -1,7 +1,7 @@
-const execution_manager_addr = "0xf5c1c518AE1D38Bd73bE36D65a8376F472849A15";
-const stardard_strategy = "0xCC0af8988BA6322946c83AEcbc60E4D2F41e62AE"
-const collection_strategy = "0x729285328d5B6BDd3698fc090bff53d5B56658b7"
-const private_strategy = "0xE786d8a20216c30F72F8125430281F6B29A79786"
+const execution_manager_addr = "0x8B6815Cc6DbbfD866cA1c6B719165657Cc9cB935";
+const stardard_strategy = "0x489C6Ec7fcA930e97afEbFF8D30B43Fb1CAa34B6"
+const collection_strategy = "0x304Ec6F615db587F5e3EbCc674C393Be412B5366"
+const private_strategy = "0x8A4D73026fd9108def8F078Bc7E83FB48d819613"
 
 require("dotenv").config({ path: ".env" });
 

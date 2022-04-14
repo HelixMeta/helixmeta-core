@@ -1,7 +1,8 @@
-const airdrop_addr = "0x5Ead792bEb1756B5a1948102832829F516F772c9";
-const pool_lp_addr = "0x6CC595Ec286b387ca576C00B396658a9464cDF89"
-const trading_reward_addr = "0xE2A7bCfB837a8644D811f6c18a10EcaC26c67cef";
-const helixmeta_token_addr = "0x3a5198947E93600074521D436e897C801F02C8f1"
+const airdrop_addr = "0xF83855ff63e43571AfDc800f51a9f25633035064";
+const pool_lp_addr = "0x24EF4d843f52A915099bfEf8262B6180565309bE";
+const trading_reward_addr = "0xb7D8C1C36135151c1c892C28908b0070B7E9CcE5";
+const private_sale_fee_sharing = "0x5336e3EfB415aC86FA0A8182DB674f121945b85E";
+const helixmeta_token_addr = "0x895A58524fCDA6d6feCe85D3e575bA045aEa854A";
 
 require("dotenv").config({ path: ".env" });
 
@@ -17,16 +18,23 @@ const HelixmetaToken = jsonfile.readFileSync(
 ).abi;
 
 async function run() {
-  const account = await web3.eth.getAccounts()
-  const contract = new web3.eth.Contract(
-    HelixmetaToken,
-    helixmeta_token_addr
-  );
-  var res = await contract.methods.transfer(airdrop_addr,"120000000000000000000000000").send({from:account[0]});
-  console.log(res)
-  res = await contract.methods.transfer(pool_lp_addr, "5000000000000000000000000").send({from: account[0]});
-  console.log(res)
-  res = await contract.methods.transfer(trading_reward_addr, "30000000000000000000000000").send({from: account[0]});
-  console.log(res)
+  const account = await web3.eth.getAccounts();
+  const contract = new web3.eth.Contract(HelixmetaToken, helixmeta_token_addr);
+  var res = await contract.methods
+    .transfer(airdrop_addr, "120000000000000000000000000")
+    .send({ from: account[0] });
+  console.log(res);
+  res = await contract.methods
+    .transfer(pool_lp_addr, "5000000000000000000000000")
+    .send({ from: account[0] });
+  console.log(res);
+  res = await contract.methods
+    .transfer(trading_reward_addr, "30000000000000000000000000")
+    .send({ from: account[0] });
+  console.log(res);
+  res = await contract.methods
+    .transfer(private_sale_fee_sharing, "15000000000000000000000000")
+    .send({ from: account[0] });
+  console.log(res);
 }
 run();

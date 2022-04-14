@@ -13,7 +13,7 @@ import {IRewardConvertor} from "../interfaces/IRewardConvertor.sol";
 
 /**
  * @title FeeSharingSetter
- * @notice It receives LooksRare protocol fees and owns the FeeSharingSystem contract.
+ * @notice It receives Helixmeta protocol fees and owns the FeeSharingSystem contract.
  * It can plug to AMMs for converting all received currencies to WETH.
  */
 contract FeeSharingSetter is ReentrancyGuard, AccessControl {
@@ -29,7 +29,7 @@ contract FeeSharingSetter is ReentrancyGuard, AccessControl {
     // Max duration for each fee-sharing period (in blocks)
     uint256 public immutable MAX_REWARD_DURATION_IN_BLOCKS;
 
-    IERC20 public immutable looksRareToken;
+    IERC20 public immutable helixmetaToken;
 
     IERC20 public immutable rewardToken;
 
@@ -49,11 +49,25 @@ contract FeeSharingSetter is ReentrancyGuard, AccessControl {
     // Reward duration in blocks
     uint256 public rewardDurationInBlocks;
 
-    // Set of addresses that are staking only the fee sharing
-    EnumerableSet.AddressSet private _feeStakingAddresses;
+    uint256 public percentForFeeStaking;
 
-    event ConversionToRewardToken(address indexed token, uint256 amountConverted, uint256 amountReceived);
-    event FeeStakingAddressesAdded(address[] feeStakingAddresses);
+    struct FeeSharingSystemShare {
+        // Set of addresses that are staking only the fee sharing
+        address _feeStakingAddresses;
+        uint256 share;
+    }
+
+    FeeSharingSystemShare[] private _feeStakingInfo;
+
+    event ConversionToRewardToken(
+        address indexed token,
+        uint256 amountConverted,
+        uint256 amountReceived
+    );
+    event FeeStakingAddressesAdded(
+        address[] feeStakingAddresses,
+        uint256[] share
+    );
     event FeeStakingAddressesRemoved(address[] feeStakingAddresses);
     event NewFeeSharingSystemOwner(address newOwner);
     event NewRewardDurationInBlocks(uint256 rewardDurationInBlocks);
@@ -65,13 +79,16 @@ contract FeeSharingSetter is ReentrancyGuard, AccessControl {
      * @param _minRewardDurationInBlocks minimum reward duration in blocks
      * @param _maxRewardDurationInBlocks maximum reward duration in blocks
      * @param _rewardDurationInBlocks reward duration between two updates in blocks
+     * @param _percentForFeeStaking reward duration between two updates in blocks
      */
     constructor(
         address _feeSharingSystem,
         uint256 _minRewardDurationInBlocks,
         uint256 _maxRewardDurationInBlocks,
-        uint256 _rewardDurationInBlocks
+        uint256 _rewardDurationInBlocks,
+        uint256 _percentForFeeStaking
     ) {
+        require(_percentForFeeStaking < 100, "can not greater than 100");
         require(
             (_rewardDurationInBlocks <= _maxRewardDurationInBlocks) &&
                 (_rewardDurationInBlocks >= _minRewardDurationInBlocks),
@@ -84,11 +101,13 @@ contract FeeSharingSetter is ReentrancyGuard, AccessControl {
         feeSharingSystem = FeeSharingSystem(_feeSharingSystem);
 
         rewardToken = feeSharingSystem.rewardToken();
-        looksRareToken = feeSharingSystem.helixmetaToken();
+        helixmetaToken = feeSharingSystem.helixmetaToken();
         tokenDistributor = feeSharingSystem.tokenDistributor();
 
         rewardDurationInBlocks = _rewardDurationInBlocks;
         nextRewardDurationInBlocks = _rewardDurationInBlocks;
+
+        percentForFeeStaking = _percentForFeeStaking;
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -96,11 +115,15 @@ contract FeeSharingSetter is ReentrancyGuard, AccessControl {
     /**
      * @notice Update the reward per block (in rewardToken)
      * @dev It automatically retrieves the number of pending WETH and adjusts
-     * based on the balance of LOOKS in fee-staking addresses that exist in the set.
+     * based on the balance of HLM in fee-staking addresses that exist in the set.
      */
     function updateRewards() external onlyRole(OPERATOR_ROLE) {
         if (lastRewardDistributionBlock > 0) {
-            require(block.number > (rewardDurationInBlocks + lastRewardDistributionBlock), "Reward: Too early to add");
+            require(
+                block.number >
+                    (rewardDurationInBlocks + lastRewardDistributionBlock),
+                "Reward: Too early to add"
+            );
         }
 
         // Adjust for this period
@@ -116,41 +139,34 @@ contract FeeSharingSetter is ReentrancyGuard, AccessControl {
         require(reward != 0, "Reward: Nothing to distribute");
 
         // Check if there is any address eligible for fee-sharing only
-        uint256 numberAddressesForFeeStaking = _feeStakingAddresses.length();
+        uint256 numberAddressesForFeeStaking = _feeStakingInfo.length;
 
         // If there are eligible addresses for fee-sharing only, calculate their shares
         if (numberAddressesForFeeStaking > 0) {
-            uint256[] memory looksBalances = new uint256[](numberAddressesForFeeStaking);
-            (uint256 totalAmountStaked, ) = tokenDistributor.userInfo(address(feeSharingSystem));
-
             for (uint256 i = 0; i < numberAddressesForFeeStaking; i++) {
-                uint256 looksBalance = looksRareToken.balanceOf(_feeStakingAddresses.at(i));
-                totalAmountStaked += looksBalance;
-                looksBalances[i] = looksBalance;
-            }
-
-            // Only apply the logic if the totalAmountStaked > 0 (to prevent division by 0)
-            if (totalAmountStaked > 0) {
-                uint256 adjustedReward = reward;
-
-                for (uint256 i = 0; i < numberAddressesForFeeStaking; i++) {
-                    uint256 amountToTransfer = (looksBalances[i] * reward) / totalAmountStaked;
-                    if (amountToTransfer > 0) {
-                        adjustedReward -= amountToTransfer;
-                        rewardToken.safeTransfer(_feeStakingAddresses.at(i), amountToTransfer);
-                    }
+                uint256 amountToTransfer = (_feeStakingInfo[i].share * reward) /
+                    100;
+                if (amountToTransfer > 0) {
+                    // adjustedReward -= amountToTransfer;
+                    rewardToken.safeTransfer(
+                        _feeStakingInfo[i]._feeStakingAddresses,
+                        amountToTransfer
+                    );
                 }
-
-                // Adjust reward accordingly
-                reward = adjustedReward;
             }
         }
 
         // Transfer tokens to fee sharing system
-        rewardToken.safeTransfer(address(feeSharingSystem), reward);
+        rewardToken.safeTransfer(
+            address(feeSharingSystem),
+            ((100 - percentForFeeStaking) * reward) / 100
+        );
 
         // Update rewards
-        feeSharingSystem.updateRewards(reward, rewardDurationInBlocks);
+        feeSharingSystem.updateRewards(
+            ((100 - percentForFeeStaking) * reward) / 100,
+            rewardDurationInBlocks
+        );
     }
 
     /**
@@ -159,22 +175,35 @@ contract FeeSharingSetter is ReentrancyGuard, AccessControl {
      * @param token address of the token to sell
      * @param additionalData additional data (e.g., slippage)
      */
-    function convertCurrencyToRewardToken(address token, bytes calldata additionalData)
-        external
-        nonReentrant
-        onlyRole(OPERATOR_ROLE)
-    {
-        require(address(rewardConvertor) != address(0), "Convert: RewardConvertor not set");
-        require(token != address(rewardToken), "Convert: Cannot be reward token");
+    function convertCurrencyToRewardToken(
+        address token,
+        bytes calldata additionalData
+    ) external nonReentrant onlyRole(OPERATOR_ROLE) {
+        require(
+            address(rewardConvertor) != address(0),
+            "Convert: RewardConvertor not set"
+        );
+        require(
+            token != address(rewardToken),
+            "Convert: Cannot be reward token"
+        );
 
         uint256 amountToConvert = IERC20(token).balanceOf(address(this));
         require(amountToConvert != 0, "Convert: Amount to convert must be > 0");
 
         // Adjust allowance for this transaction only
-        IERC20(token).safeIncreaseAllowance(address(rewardConvertor), amountToConvert);
+        IERC20(token).safeIncreaseAllowance(
+            address(rewardConvertor),
+            amountToConvert
+        );
 
         // Exchange token to reward token
-        uint256 amountReceived = rewardConvertor.convert(token, address(rewardToken), amountToConvert, additionalData);
+        uint256 amountReceived = rewardConvertor.convert(
+            token,
+            address(rewardToken),
+            amountToConvert,
+            additionalData
+        );
 
         emit ConversionToRewardToken(token, amountToConvert, amountReceived);
     }
@@ -182,34 +211,35 @@ contract FeeSharingSetter is ReentrancyGuard, AccessControl {
     /**
      * @notice Add staking addresses
      * @param _stakingAddresses array of addresses eligible for fee-sharing only
+     * @param _share array of percentage eligible for fee-sharing only
+
      */
-    function addFeeStakingAddresses(address[] calldata _stakingAddresses) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function updateFeeStakingAddresses(
+        address[] calldata _stakingAddresses,
+        uint256[] calldata _share
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_stakingAddresses.length == _share.length, "Have to map");
+        uint256 totalShare = 0;
+        delete _feeStakingInfo;
         for (uint256 i = 0; i < _stakingAddresses.length; i++) {
-            require(!_feeStakingAddresses.contains(_stakingAddresses[i]), "Owner: Address already registered");
-            _feeStakingAddresses.add(_stakingAddresses[i]);
+            _feeStakingInfo[i] = FeeSharingSystemShare({
+                _feeStakingAddresses: _stakingAddresses[i],
+                share: _share[i]
+            });
+            totalShare += _share[i];
         }
-
-        emit FeeStakingAddressesAdded(_stakingAddresses);
-    }
-
-    /**
-     * @notice Remove staking addresses
-     * @param _stakingAddresses array of addresses eligible for fee-sharing only
-     */
-    function removeFeeStakingAddresses(address[] calldata _stakingAddresses) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        for (uint256 i = 0; i < _stakingAddresses.length; i++) {
-            require(_feeStakingAddresses.contains(_stakingAddresses[i]), "Owner: Address not registered");
-            _feeStakingAddresses.remove(_stakingAddresses[i]);
-        }
-
-        emit FeeStakingAddressesRemoved(_stakingAddresses);
+        require(totalShare == percentForFeeStaking, "Can not devide");
+        emit FeeStakingAddressesAdded(_stakingAddresses, _share);
     }
 
     /**
      * @notice Set new reward duration in blocks for next update
      * @param _newRewardDurationInBlocks number of blocks for new reward period
      */
-    function setNewRewardDurationInBlocks(uint256 _newRewardDurationInBlocks) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setNewRewardDurationInBlocks(uint256 _newRewardDurationInBlocks)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(
             (_newRewardDurationInBlocks <= MAX_REWARD_DURATION_IN_BLOCKS) &&
                 (_newRewardDurationInBlocks >= MIN_REWARD_DURATION_IN_BLOCKS),
@@ -225,7 +255,10 @@ contract FeeSharingSetter is ReentrancyGuard, AccessControl {
      * @notice Set reward convertor contract
      * @param _rewardConvertor address of the reward convertor (set to null to deactivate)
      */
-    function setRewardConvertor(address _rewardConvertor) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setRewardConvertor(address _rewardConvertor)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         rewardConvertor = IRewardConvertor(_rewardConvertor);
 
         emit NewRewardConvertor(_rewardConvertor);
@@ -235,8 +268,14 @@ contract FeeSharingSetter is ReentrancyGuard, AccessControl {
      * @notice Transfer ownership of fee sharing system
      * @param _newOwner address of the new owner
      */
-    function transferOwnershipOfFeeSharingSystem(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_newOwner != address(0), "Owner: New owner cannot be null address");
+    function transferOwnershipOfFeeSharingSystem(address _newOwner)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        require(
+            _newOwner != address(0),
+            "Owner: New owner cannot be null address"
+        );
         feeSharingSystem.transferOwnership(_newOwner);
 
         emit NewFeeSharingSystemOwner(_newOwner);
@@ -245,13 +284,18 @@ contract FeeSharingSetter is ReentrancyGuard, AccessControl {
     /**
      * @notice See addresses eligible for fee-staking
      */
-    function viewFeeStakingAddresses() external view returns (address[] memory) {
-        uint256 length = _feeStakingAddresses.length();
+    function viewFeeStakingAddresses()
+        external
+        view
+        returns (FeeSharingSystemShare[] memory)
+    {
+        uint256 length = _feeStakingInfo.length;
 
-        address[] memory feeStakingAddresses = new address[](length);
+        FeeSharingSystemShare[]
+            memory feeStakingAddresses = new FeeSharingSystemShare[](length);
 
         for (uint256 i = 0; i < length; i++) {
-            feeStakingAddresses[i] = _feeStakingAddresses.at(i);
+            feeStakingAddresses[i] = _feeStakingInfo[i];
         }
 
         return (feeStakingAddresses);

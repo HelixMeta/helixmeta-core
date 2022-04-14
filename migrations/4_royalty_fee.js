@@ -8,12 +8,10 @@ module.exports = async function (deployer) {
     RoyaltyFeeRegistry,
     process.env.ROYALTY_FEE_LIMIT
   );
-  const royalty_fee_registry = await RoyaltyFeeRegistry.deployed();
 
   await deployer.deploy(
     RoyaltyFeeSetter,
-    royalty_fee_registry.address
+    RoyaltyFeeRegistry.address
   );
-  await RoyaltyFeeSetter.deployed();
 
 };

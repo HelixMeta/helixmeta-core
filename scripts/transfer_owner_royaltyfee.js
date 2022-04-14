@@ -1,5 +1,5 @@
-const royalty_fee_register_addr = "0xD7Ce809ebce2Ba7749CF3B1E67a406bE86d698FD";
-const royalty_fee_setter_addr = "0x2081d8Fd9b0F3e8B521A31F3561e4f9F71E683B1";
+const royalty_fee_register_addr = "0x666993E157397317dB1C210Ae1e07f2201870805";
+const royalty_fee_setter_addr = "0x7F3F1CE18E66925E23AE63a640AAB59E4F3C1800";
 require("dotenv").config({ path: ".env" });
 const jsonfile = require("jsonfile");
 const HDWalletProvider = require("@truffle/hdwallet-provider");

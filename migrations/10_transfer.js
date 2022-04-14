@@ -1,6 +1,8 @@
 const TransferManagerERC721 = artifacts.require("TransferManagerERC721");
 const TransferManagerERC1155 = artifacts.require("TransferManagerERC1155");
-const TransferManagerNonCompliantERC721 = artifacts.require("TransferManagerNonCompliantERC721");
+const TransferManagerNonCompliantERC721 = artifacts.require(
+  "TransferManagerNonCompliantERC721"
+);
 const TransferSelectorNFT = artifacts.require("TransferSelectorNFT");
 
 const HelixmetaExchange = artifacts.require("HelixmetaExchange");
@@ -12,7 +14,6 @@ module.exports = async function (deployer) {
       await HelixmetaExchange.deployed()
     ).address
   );
-  const transfer_manager_erc721 = await TransferManagerERC721.deployed();
 
   await deployer.deploy(
     TransferManagerERC1155,
@@ -20,7 +21,6 @@ module.exports = async function (deployer) {
       await HelixmetaExchange.deployed()
     ).address
   );
-  const transfer_manager_erc1155 = await TransferManagerERC1155.deployed();
 
   await deployer.deploy(
     TransferManagerNonCompliantERC721,
@@ -28,12 +28,11 @@ module.exports = async function (deployer) {
       await HelixmetaExchange.deployed()
     ).address
   );
-  await TransferManagerNonCompliantERC721.deployed();
 
   await deployer.deploy(
     TransferSelectorNFT,
-    transfer_manager_erc721.address,
-    transfer_manager_erc1155.address
+    TransferManagerERC721.address,
+    TransferManagerERC1155.address
   );
   await TransferSelectorNFT.deployed();
 };

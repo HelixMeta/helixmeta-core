@@ -1,4 +1,6 @@
-const StakingPoolForUniswapV2Tokens = artifacts.require("StakingPoolForUniswapV2Tokens");
+const StakingPoolForUniswapV2Tokens = artifacts.require(
+  "StakingPoolForUniswapV2Tokens"
+);
 const HelixmetaToken = artifacts.require("HelixmetaToken");
 
 module.exports = async function (deployer) {
@@ -10,8 +12,6 @@ module.exports = async function (deployer) {
     ).address,
     process.env.REWARD_PER_BLOCK,
     process.env.STARTBLOCK_POOL,
-    process.env.ENDBLOCK_POOL,
+    process.env.ENDBLOCK_POOL
   );
-  await StakingPoolForUniswapV2Tokens.deployed();
- 
 };

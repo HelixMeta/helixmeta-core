@@ -2,7 +2,9 @@ const HelixmetaAirdrop = artifacts.require("HelixmetaAirdrop");
 const HelixmetaToken = artifacts.require("HelixmetaToken");
 const TransferManagerERC721 = artifacts.require("TransferManagerERC721");
 const TransferManagerERC1155 = artifacts.require("TransferManagerERC1155");
-const StrategyStandardSaleForFixedPrice = artifacts.require("StrategyStandardSaleForFixedPrice");
+const StrategyStandardSaleForFixedPrice = artifacts.require(
+  "StrategyStandardSaleForFixedPrice"
+);
 
 module.exports = async function (deployer) {
   await deployer.deploy(
@@ -22,7 +24,6 @@ module.exports = async function (deployer) {
     (
       await StrategyStandardSaleForFixedPrice.deployed()
     ).address,
-    process.env.WETH,
+    process.env.WETH
   );
-  await HelixmetaAirdrop.deployed();
 };

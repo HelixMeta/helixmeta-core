@@ -1,5 +1,5 @@
-const token_distributor = "0x1615985C5A01DbF0779c52869e44E250DCe918C4";
-const HLM_token = "0x3a5198947E93600074521D436e897C801F02C8f1"
+const token_distributor = "0x5cDDd19C1e88E04dA6d1b134669ead765C1056B5";
+const HLM_token = "0x895A58524fCDA6d6feCe85D3e575bA045aEa854A"
 require("dotenv").config({ path: ".env" });
 const WETH = process.env.WETH;
 const jsonfile = require("jsonfile");

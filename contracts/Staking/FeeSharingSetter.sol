@@ -215,20 +215,19 @@ contract FeeSharingSetter is ReentrancyGuard, AccessControl {
 
      */
     function updateFeeStakingAddresses(
-        address[] calldata _stakingAddresses,
-        uint256[] calldata _share
+        address[] memory _stakingAddresses,
+        uint256[] memory _share
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_stakingAddresses.length == _share.length, "Have to map");
         uint256 totalShare = 0;
         delete _feeStakingInfo;
         for (uint256 i = 0; i < _stakingAddresses.length; i++) {
-            _feeStakingInfo[i] = FeeSharingSystemShare({
-                _feeStakingAddresses: _stakingAddresses[i],
-                share: _share[i]
-            });
+            _feeStakingInfo.push(
+                FeeSharingSystemShare(_stakingAddresses[i], _share[i])
+            );
             totalShare += _share[i];
         }
-        require(totalShare == percentForFeeStaking, "Can not devide");
+        require(totalShare == percentForFeeStaking, "Can not divide");
         emit FeeStakingAddressesAdded(_stakingAddresses, _share);
     }
 

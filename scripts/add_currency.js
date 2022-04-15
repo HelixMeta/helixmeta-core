@@ -1,5 +1,4 @@
 const currency_manager_addr = "0xFF6F3929e93CC137a74A66a2D92fA83a0af1714E";
-const HLM_token = "0x895A58524fCDA6d6feCe85D3e575bA045aEa854A";
 require("dotenv").config({ path: ".env" });
 const WETH = process.env.WETH;
 const jsonfile = require("jsonfile");
@@ -21,7 +20,7 @@ async function run() {
   );
 
   var res = await currency_manager.methods
-    .addCurrency(HLM_token)
+    .addCurrency(WETH)
     .send({ from: account[0] });
   console.log(res);
 }

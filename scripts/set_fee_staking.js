@@ -25,14 +25,14 @@ async function run() {
 // const res = await contract.methods
 //     .viewFeeStakingAddresses()
 //     .call({ from: account[0] });
-//   const res = await contract.methods
-//     .updateFeeStakingAddresses(users, shares)
-//     .send({ from: account[0] });
-//   console.log(res);
-
   const res = await contract.methods
-    .updateRewards()
+    .updateFeeStakingAddresses(users, shares)
     .send({ from: account[0] });
   console.log(res);
+
+  // const res = await contract.methods
+  //   .updateRewards()
+  //   .send({ from: account[0] });
+  // console.log(res);
 }
 run();

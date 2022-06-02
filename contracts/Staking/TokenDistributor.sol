@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import {IERC20, SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IHelixmetaToken} from "../interfaces/IHelixmetaToken.sol";
 
@@ -11,7 +13,7 @@ import {IHelixmetaToken} from "../interfaces/IHelixmetaToken.sol";
  * @notice It handles the distribution of HLM token.
  * It auto-adjusts block rewards over a set number of periods.
  */
-contract TokenDistributor is ReentrancyGuard {
+contract TokenDistributor is ReentrancyGuard, Pausable, Ownable {
     using SafeERC20 for IERC20;
     using SafeERC20 for IHelixmetaToken;
 
@@ -65,14 +67,22 @@ contract TokenDistributor is ReentrancyGuard {
     mapping(address => UserInfo) public userInfo;
 
     event Compound(address indexed user, uint256 harvestedAmount);
-    event Deposit(address indexed user, uint256 amount, uint256 harvestedAmount);
+    event Deposit(
+        address indexed user,
+        uint256 amount,
+        uint256 harvestedAmount
+    );
     event NewRewardsPerBlock(
         uint256 indexed currentPhase,
         uint256 startBlock,
         uint256 rewardPerBlockForStaking,
         uint256 rewardPerBlockForOthers
     );
-    event Withdraw(address indexed user, uint256 amount, uint256 harvestedAmount);
+    event Withdraw(
+        address indexed user,
+        uint256 amount,
+        uint256 harvestedAmount
+    );
 
     /**
      * @notice Constructor
@@ -101,8 +111,8 @@ contract TokenDistributor is ReentrancyGuard {
         );
 
         // 1. Operational checks for supply
-        uint256 nonCirculatingSupply = IHelixmetaToken(_helixmetaToken).SUPPLY_CAP() -
-            IHelixmetaToken(_helixmetaToken).totalSupply();
+        uint256 nonCirculatingSupply = IHelixmetaToken(_helixmetaToken)
+            .SUPPLY_CAP() - IHelixmetaToken(_helixmetaToken).totalSupply();
 
         uint256 amountTokensToBeMinted;
 
@@ -118,7 +128,10 @@ contract TokenDistributor is ReentrancyGuard {
             });
         }
 
-        require(amountTokensToBeMinted == nonCirculatingSupply, "Distributor: Wrong reward parameters");
+        require(
+            amountTokensToBeMinted == nonCirculatingSupply,
+            "Distributor: Wrong reward parameters"
+        );
 
         // 2. Store values
         helixmetaToken = IHelixmetaToken(_helixmetaToken);
@@ -133,13 +146,29 @@ contract TokenDistributor is ReentrancyGuard {
 
         // Set the lastRewardBlock as the startBlock
         lastRewardBlock = _startBlock;
+
+        _pause();
+    }
+
+    /**
+     * @notice Pause staking
+     */
+    function pauseTokenDistributor() external onlyOwner whenNotPaused {
+        _pause();
+    }
+
+    /**
+     * @notice Unpause staking
+     */
+    function unpauseTokenDistributor() external onlyOwner whenPaused {
+        _unpause();
     }
 
     /**
      * @notice Deposit staked tokens and compounds pending rewards
      * @param amount amount to deposit (in HLM)
      */
-    function deposit(uint256 amount) external nonReentrant {
+    function deposit(uint256 amount) external nonReentrant whenNotPaused {
         require(amount > 0, "Deposit: Amount must be > 0");
 
         // Update pool information
@@ -153,13 +182,16 @@ contract TokenDistributor is ReentrancyGuard {
         // If not new deposit, calculate pending rewards (for auto-compounding)
         if (userInfo[msg.sender].amount > 0) {
             pendingRewards =
-                ((userInfo[msg.sender].amount * accTokenPerShare) / PRECISION_FACTOR) -
+                ((userInfo[msg.sender].amount * accTokenPerShare) /
+                    PRECISION_FACTOR) -
                 userInfo[msg.sender].rewardDebt;
         }
 
         // Adjust user information
         userInfo[msg.sender].amount += (amount + pendingRewards);
-        userInfo[msg.sender].rewardDebt = (userInfo[msg.sender].amount * accTokenPerShare) / PRECISION_FACTOR;
+        userInfo[msg.sender].rewardDebt =
+            (userInfo[msg.sender].amount * accTokenPerShare) /
+            PRECISION_FACTOR;
 
         // Increase totalAmountStaked
         totalAmountStaked += (amount + pendingRewards);
@@ -170,12 +202,13 @@ contract TokenDistributor is ReentrancyGuard {
     /**
      * @notice Compound based on pending rewards
      */
-    function harvestAndCompound() external nonReentrant {
+    function harvestAndCompound() external nonReentrant whenNotPaused {
         // Update pool information
         _updatePool();
 
         // Calculate pending rewards
-        uint256 pendingRewards = ((userInfo[msg.sender].amount * accTokenPerShare) / PRECISION_FACTOR) -
+        uint256 pendingRewards = ((userInfo[msg.sender].amount *
+            accTokenPerShare) / PRECISION_FACTOR) -
             userInfo[msg.sender].rewardDebt;
 
         // Return if no pending rewards
@@ -191,7 +224,9 @@ contract TokenDistributor is ReentrancyGuard {
         totalAmountStaked += pendingRewards;
 
         // Recalculate reward debt based on new user amount
-        userInfo[msg.sender].rewardDebt = (userInfo[msg.sender].amount * accTokenPerShare) / PRECISION_FACTOR;
+        userInfo[msg.sender].rewardDebt =
+            (userInfo[msg.sender].amount * accTokenPerShare) /
+            PRECISION_FACTOR;
 
         emit Compound(msg.sender, pendingRewards);
     }
@@ -199,7 +234,7 @@ contract TokenDistributor is ReentrancyGuard {
     /**
      * @notice Update pool rewards
      */
-    function updatePool() external nonReentrant {
+    function updatePool() external nonReentrant whenNotPaused {
         _updatePool();
     }
 
@@ -207,7 +242,7 @@ contract TokenDistributor is ReentrancyGuard {
      * @notice Withdraw staked tokens and compound pending rewards
      * @param amount amount to withdraw
      */
-    function withdraw(uint256 amount) external nonReentrant {
+    function withdraw(uint256 amount) external nonReentrant whenNotPaused {
         require(
             (userInfo[msg.sender].amount >= amount) && (amount > 0),
             "Withdraw: Amount must be > 0 or lower than user balance"
@@ -217,12 +252,18 @@ contract TokenDistributor is ReentrancyGuard {
         _updatePool();
 
         // Calculate pending rewards
-        uint256 pendingRewards = ((userInfo[msg.sender].amount * accTokenPerShare) / PRECISION_FACTOR) -
+        uint256 pendingRewards = ((userInfo[msg.sender].amount *
+            accTokenPerShare) / PRECISION_FACTOR) -
             userInfo[msg.sender].rewardDebt;
 
         // Adjust user information
-        userInfo[msg.sender].amount = userInfo[msg.sender].amount + pendingRewards - amount;
-        userInfo[msg.sender].rewardDebt = (userInfo[msg.sender].amount * accTokenPerShare) / PRECISION_FACTOR;
+        userInfo[msg.sender].amount =
+            userInfo[msg.sender].amount +
+            pendingRewards -
+            amount;
+        userInfo[msg.sender].rewardDebt =
+            (userInfo[msg.sender].amount * accTokenPerShare) /
+            PRECISION_FACTOR;
 
         // Adjust total amount staked
         totalAmountStaked = totalAmountStaked + pendingRewards - amount;
@@ -236,14 +277,18 @@ contract TokenDistributor is ReentrancyGuard {
     /**
      * @notice Withdraw all staked tokens and collect tokens
      */
-    function withdrawAll() external nonReentrant {
-        require(userInfo[msg.sender].amount > 0, "Withdraw: Amount must be > 0");
+    function withdrawAll() external nonReentrant whenNotPaused {
+        require(
+            userInfo[msg.sender].amount > 0,
+            "Withdraw: Amount must be > 0"
+        );
 
         // Update pool
         _updatePool();
 
         // Calculate pending rewards and amount to transfer (to the sender)
-        uint256 pendingRewards = ((userInfo[msg.sender].amount * accTokenPerShare) / PRECISION_FACTOR) -
+        uint256 pendingRewards = ((userInfo[msg.sender].amount *
+            accTokenPerShare) / PRECISION_FACTOR) -
             userInfo[msg.sender].rewardDebt;
 
         uint256 amountToTransfer = userInfo[msg.sender].amount + pendingRewards;
@@ -266,28 +311,40 @@ contract TokenDistributor is ReentrancyGuard {
      * @param user address of the user
      * @return Pending rewards
      */
-    function calculatePendingRewards(address user) external view returns (uint256) {
+    function calculatePendingRewards(address user)
+        external
+        view
+        returns (uint256)
+    {
         if ((block.number > lastRewardBlock) && (totalAmountStaked != 0)) {
             uint256 multiplier = _getMultiplier(lastRewardBlock, block.number);
 
-            uint256 tokenRewardForStaking = multiplier * rewardPerBlockForStaking;
+            uint256 tokenRewardForStaking = multiplier *
+                rewardPerBlockForStaking;
 
             uint256 adjustedEndBlock = endBlock;
             uint256 adjustedCurrentPhase = currentPhase;
 
             // Check whether to adjust multipliers and reward per block
-            while ((block.number > adjustedEndBlock) && (adjustedCurrentPhase < (NUMBER_PERIODS - 1))) {
+            while (
+                (block.number > adjustedEndBlock) &&
+                (adjustedCurrentPhase < (NUMBER_PERIODS - 1))
+            ) {
                 // Update current phase
                 adjustedCurrentPhase++;
 
                 // Update rewards per block
-                uint256 adjustedRewardPerBlockForStaking = stakingPeriod[adjustedCurrentPhase].rewardPerBlockForStaking;
+                uint256 adjustedRewardPerBlockForStaking = stakingPeriod[
+                    adjustedCurrentPhase
+                ].rewardPerBlockForStaking;
 
                 // Calculate adjusted block number
                 uint256 previousEndBlock = adjustedEndBlock;
 
                 // Update end block
-                adjustedEndBlock = previousEndBlock + stakingPeriod[adjustedCurrentPhase].periodLengthInBlock;
+                adjustedEndBlock =
+                    previousEndBlock +
+                    stakingPeriod[adjustedCurrentPhase].periodLengthInBlock;
 
                 // Calculate new multiplier
                 uint256 newMultiplier = (block.number <= adjustedEndBlock)
@@ -295,16 +352,23 @@ contract TokenDistributor is ReentrancyGuard {
                     : stakingPeriod[adjustedCurrentPhase].periodLengthInBlock;
 
                 // Adjust token rewards for staking
-                tokenRewardForStaking += (newMultiplier * adjustedRewardPerBlockForStaking);
+                tokenRewardForStaking += (newMultiplier *
+                    adjustedRewardPerBlockForStaking);
             }
 
             uint256 adjustedTokenPerShare = accTokenPerShare +
                 (tokenRewardForStaking * PRECISION_FACTOR) /
                 totalAmountStaked;
 
-            return (userInfo[user].amount * adjustedTokenPerShare) / PRECISION_FACTOR - userInfo[user].rewardDebt;
+            return
+                (userInfo[user].amount * adjustedTokenPerShare) /
+                PRECISION_FACTOR -
+                userInfo[user].rewardDebt;
         } else {
-            return (userInfo[user].amount * accTokenPerShare) / PRECISION_FACTOR - userInfo[user].rewardDebt;
+            return
+                (userInfo[user].amount * accTokenPerShare) /
+                PRECISION_FACTOR -
+                userInfo[user].rewardDebt;
         }
     }
 
@@ -329,7 +393,9 @@ contract TokenDistributor is ReentrancyGuard {
         uint256 tokenRewardForOthers = multiplier * rewardPerBlockForOthers;
 
         // Check whether to adjust multipliers and reward per block
-        while ((block.number > endBlock) && (currentPhase < (NUMBER_PERIODS - 1))) {
+        while (
+            (block.number > endBlock) && (currentPhase < (NUMBER_PERIODS - 1))
+        ) {
             // Update rewards per block
             _updateRewardsPerBlock(endBlock);
 
@@ -339,7 +405,10 @@ contract TokenDistributor is ReentrancyGuard {
             endBlock += stakingPeriod[currentPhase].periodLengthInBlock;
 
             // Adjust multiplier to cover the missing periods with other lower inflation schedule
-            uint256 newMultiplier = _getMultiplier(previousEndBlock, block.number);
+            uint256 newMultiplier = _getMultiplier(
+                previousEndBlock,
+                block.number
+            );
 
             // Adjust token rewards
             tokenRewardForStaking += (newMultiplier * rewardPerBlockForStaking);
@@ -349,9 +418,15 @@ contract TokenDistributor is ReentrancyGuard {
         // Mint tokens only if token rewards for staking are not null
         if (tokenRewardForStaking > 0) {
             // It allows protection against potential issues to prevent funds from being locked
-            bool mintStatus = helixmetaToken.mint(address(this), tokenRewardForStaking);
+            bool mintStatus = helixmetaToken.mint(
+                address(this),
+                tokenRewardForStaking
+            );
             if (mintStatus) {
-                accTokenPerShare = accTokenPerShare + ((tokenRewardForStaking * PRECISION_FACTOR) / totalAmountStaked);
+                accTokenPerShare =
+                    accTokenPerShare +
+                    ((tokenRewardForStaking * PRECISION_FACTOR) /
+                        totalAmountStaked);
             }
 
             helixmetaToken.mint(tokenSplitter, tokenRewardForOthers);
@@ -372,10 +447,17 @@ contract TokenDistributor is ReentrancyGuard {
         currentPhase++;
 
         // Update rewards per block
-        rewardPerBlockForStaking = stakingPeriod[currentPhase].rewardPerBlockForStaking;
-        rewardPerBlockForOthers = stakingPeriod[currentPhase].rewardPerBlockForOthers;
+        rewardPerBlockForStaking = stakingPeriod[currentPhase]
+            .rewardPerBlockForStaking;
+        rewardPerBlockForOthers = stakingPeriod[currentPhase]
+            .rewardPerBlockForOthers;
 
-        emit NewRewardsPerBlock(currentPhase, _newStartBlock, rewardPerBlockForStaking, rewardPerBlockForOthers);
+        emit NewRewardsPerBlock(
+            currentPhase,
+            _newStartBlock,
+            rewardPerBlockForStaking,
+            rewardPerBlockForOthers
+        );
     }
 
     /**
@@ -384,7 +466,11 @@ contract TokenDistributor is ReentrancyGuard {
      * @param to block to finish calculating reward
      * @return the multiplier for the period
      */
-    function _getMultiplier(uint256 from, uint256 to) internal view returns (uint256) {
+    function _getMultiplier(uint256 from, uint256 to)
+        internal
+        view
+        returns (uint256)
+    {
         if (to <= endBlock) {
             return to - from;
         } else if (from >= endBlock) {

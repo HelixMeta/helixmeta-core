@@ -77,6 +77,8 @@ contract HelixmetaAirdrop is Pausable, ReentrancyGuard, Ownable {
 
         MAIN_STRATEGY = _mainStrategy;
         WETH = _weth;
+
+        _pause();
     }
 
     /**

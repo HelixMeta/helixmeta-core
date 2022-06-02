@@ -49,7 +49,7 @@ contract TradingRewardsDistributor is Pausable, ReentrancyGuard, Ownable {
      */
     constructor(address _helixmetaToken) {
         helixmetaToken = IERC20(_helixmetaToken);
-        // _pause();
+        _pause();
     }
 
     /**

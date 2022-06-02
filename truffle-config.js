@@ -27,9 +27,24 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           privateKeys,
-          `https://rinkeby.infura.io/v3/` + process.env.INFURA_KEY, 0, 2
+          `https://rinkeby.infura.io/v3/` + process.env.INFURA_KEY,
+          0,
+          2
         ),
       network_id: 4,
+      confirmations: 2,
+      networkCheckTimeout: 1000000,
+      timeoutBlocks: 500,
+      skipDryRun: true,
+    },
+    mumbai: {
+      provider: () =>
+        new HDWalletProvider(
+          privateKeys,
+          `https://matic-mumbai.chainstacklabs.com`
+        ),
+
+      network_id: 80001,
       confirmations: 2,
       networkCheckTimeout: 1000000,
       timeoutBlocks: 500,
@@ -39,7 +54,9 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(
           privateKeys,
-          `https://ropsten.infura.io/v3/` + process.env.INFURA_KEY, 0, 2
+          `https://ropsten.infura.io/v3/` + process.env.INFURA_KEY,
+          0,
+          2
         ),
       network_id: 3,
       confirmations: 2,

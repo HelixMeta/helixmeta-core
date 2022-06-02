@@ -9,11 +9,12 @@ const TradingRewardsDistributor = artifacts.require(
 
 module.exports = async function (deployer) {
   let account = process.env.ACCOUNT.split(" ");
-  account[2] = (await TradingRewardsDistributor.deployed()).address;
+  let share = process.env.SHARES.split(" ");
+  account[share.length-1] = (await TradingRewardsDistributor.deployed()).address;
   await deployer.deploy(
     TokenSplitter,
     account,
-    process.env.SHARES.split(" "),
+    share,
     (
       await HelixmetaToken.deployed()
     ).address
